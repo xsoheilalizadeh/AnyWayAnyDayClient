@@ -15,16 +15,17 @@ namespace Airline
         private readonly IHttpClientFactory _httpClientFactory;
 
         private readonly Uri _baseUri = new Uri("https://api.anywayanyday.com");
+        private bool _disposed;
 
         public AirlineClient()
-        {
+        {   
             _httpClientFactory = new HttpClientFactory();
         }
 
         public HttpClient Client => _httpClientFactory.GetOrCreate(_baseUri);
 
 
-        public Task<InitialResponse> InitializeQueryAsync(InitialRequest request)
+        public async Task<InitialResponse> InitializeQueryAsync(InitialRequest request)
         {
             if (request == null)
             {
@@ -36,7 +37,14 @@ namespace Airline
                 throw new InvalidOperationException("The request hasn't any route");
             }
 
-            return GetInitializeQueryAsync(request);
+            var response = await GetInitializeQueryAsync(request).ConfigureAwait(false);
+
+            if (response.Succeeded)
+            {
+                await Task.Delay(1500).ConfigureAwait(false);
+            }
+
+            return response;
         }
 
         public Task<FaresResponse> FaresAsync(FaresRequest request)
@@ -67,6 +75,23 @@ namespace Airline
             }
 
             return GetConfirmFareAsync(request);
+        }
+
+        public Task<CreateOrderResponse> CreateOrderAsync(CreateOrderRequest request)
+        {
+            if (request == null)
+            {
+                throw new NullReferenceException(nameof(request));
+            }
+
+            return GetCreateOrderAsync(request);
+        }
+
+        private Task<CreateOrderResponse> GetCreateOrderAsync(CreateOrderRequest request)
+        {
+            var requestUrl = request.ToString();
+
+            return GetAsync<CreateOrderResponse>(requestUrl);
         }
 
         private Task<ConfirmFareResponse> GetConfirmFareAsync(ConfirmFareRequest request)
@@ -109,6 +134,19 @@ namespace Airline
 
                 return await response.Content.ReadAsync<TResponse>().ConfigureAwait(false);
             }
+        }
+
+        private void Dispose(bool disposed) => _disposed = disposed;
+       
+        public void Dispose()
+        {
+            if (_disposed)
+            {
+                return;
+            }
+            
+            GC.SuppressFinalize(this);
+            Dispose(true);
         }
     }
 }

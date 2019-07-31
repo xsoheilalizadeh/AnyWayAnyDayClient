@@ -7,6 +7,12 @@ namespace Airline
 {
     public class InitialRequest
     {
+        public InitialRequest(string partner,FlightClass @class)
+        {
+            Partner = partner;
+            Class = @class;
+        }
+        
         public IList<Route> Routes { get; private set; } = new List<Route>();
 
         public string Partner { get; set; }
@@ -40,12 +46,6 @@ namespace Airline
 
             Routes.Add(route);
         }
-
-        public InitialRequest Build() => this;
-
-        public void SetPartner(string partner) => Partner = partner;
-
-        public void SetClass(FlightClass @class) => Class = @class;
 
         public void SetPassengerCount(int adultCount = 1, int childCount = 0, int infantCount = 0)
         {
